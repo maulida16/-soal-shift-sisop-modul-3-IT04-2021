@@ -1,6 +1,7 @@
-//program perkalian matriks arr1[4][3] dan arr2[3][6]
-#include<stdio.h>
-#include <stdlib.h> 
+#include <stdio.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <unistd.h>
 #define col1 4
 #define col2 3
 #define col3 6
@@ -9,6 +10,7 @@
 int arr1[col1][col2];
 int arr2[col2][col3];
 int temp[col1][col3];
+
 
 void matrixprep(){
 
@@ -75,8 +77,8 @@ void matrixprint(int param){
 
 }
 
-void multiply(int mat1[col1][col2], int mat2[col2][col3], int res[col1][col3])
-{
+void multiply(int mat1[col1][col2], int mat2[col2][col3], int res[col1][col3]){
+
     int i, j, k;
     for (i = 0; i < col1; i++) {
         for (j = 0; j < col3; j++) {
@@ -96,15 +98,45 @@ void multiply(int mat1[col1][col2], int mat2[col2][col3], int res[col1][col3])
 	printf("\n");
 }
 
-int main(){
+void main()
+{
+    key_t key = 1234;
+    int	*value, *andri;
+	*andri = 0;
 
-	matrixprep();
-	// matrixprint(3);
+    int shmid = shmget(key, sizeof(int), IPC_CREAT | 0666);
+    value = shmat(shmid, NULL, 0);
+	andri = shmat(shmid, NULL, 0);
 
-	printf("\n");
-	
+    matrixprep();
 	multiply(arr1, arr2, temp);
 	matrixprint(3);
+	// printf("hampir jalan y\n");
 
+    for (int i = 0; i < col1; i++){
+        for (int j = 0; j < col3; j++){
+            value[i*col3+j] = temp[i][j];
+        }
+    }
+
+	// printf("hampir jalan x\n");
+
+	for (int i = 0; i < col1; i++){
+        for (int j = 0; j < col3; j++){
+            printf("%d", value[i*col3+j]);
+        }
+    }
+
+	printf("\nhampir jalan\n");
+
+	while(1){
+		if (*andri == 5) {printf("andri received = %d\n", *andri); break;}
+		printf("waiting for andri...\n");
+		sleep(1);
+	}
 	
+
+    shmdt(value);
+	shmdt(andri);
+    shmctl(shmid, IPC_RMID, NULL);
 }
