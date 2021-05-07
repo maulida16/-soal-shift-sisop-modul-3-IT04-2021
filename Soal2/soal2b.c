@@ -59,6 +59,7 @@ void* factpthread3(void *z){
 	}
 	else final[*goal2] += 0;
 	muteks = 1;
+	printf("/n");
 
 }
 
