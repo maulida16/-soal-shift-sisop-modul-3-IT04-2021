@@ -30,7 +30,7 @@ if (pipe(pipe2) == -1){printf("Andri lagi"); exit(1);}
 		close(pipe2[0]);
 		dup2(pipe2[1], STDOUT_FILENO);
 		// exec
-		char *argv1[] = {"sort", "-n", NULL};
+		char *argv1[] = {"sort", "-nrk", "3,3", NULL};
 		execv("/bin/sort", argv1);
 		} 
 		
