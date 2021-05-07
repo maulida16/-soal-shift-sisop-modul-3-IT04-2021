@@ -26,10 +26,12 @@ int fact(int num){
 }
 
 void matrixprep(){
-
+	int rem = col1*col3;;
 	for(int i = 0; i < col1; i++){
 		for(int j = 0; j < col3; j++){
+			printf("Number to input remaining: %d\n", rem-(i*col3+j));
 			scanf("%d", &baru[i*col3+j]);
+			printf("\n");
 		}
 	}
 }

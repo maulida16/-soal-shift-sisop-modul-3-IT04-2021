@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <unistd.h>
@@ -14,16 +15,26 @@ int temp[col1][col3];
 
 void matrixprep(){
 
-	for(int i = 0; i < col1; i++){
-		for(int j = 0; j < col2; j++){
-			scanf("%d", &arr1[i][j]);
-		}
+	int a = 0, rem;
+	if(a == 0){
+		a++;
+		rem = col1*col2;
+		for(int i = 0; i < col1; i++){
+			for(int j = 0; j < col2; j++){
+				printf("Number to input to arr1 remaining: %d\n", rem-(i*col2+j));
+				scanf("%d", &arr1[i][j]);
+				printf("\n");
+			}
+		} 
 	}
-
-	for(int i = 0; i < col2; i++){
-		for(int j = 0; j < col3; j++){
-			//input angka 32 kali (12 + 20)
-			scanf("%d", &arr2[i][j]);
+	if (a != 0){
+		rem = col2*col3;
+		for(int i = 0; i < col2; i++){
+			for(int j = 0; j < col3; j++){
+				printf("Number to input to arr2 remaining: %d\n", rem-(i*col3+j));
+				scanf("%d", &arr2[i][j]);
+				printf("\n");
+			}
 		}
 	}
 	printf("\n");
@@ -111,26 +122,27 @@ void main()
     matrixprep();
 	multiply(arr1, arr2, temp);
 	matrixprint(3);
-	// printf("hampir jalan y\n");
 
+	// printf("Value: \n");
     for (int i = 0; i < col1; i++){
         for (int j = 0; j < col3; j++){
             value[i*col3+j] = temp[i][j];
         }
     }
 
-	// printf("hampir jalan x\n");
-
+	printf("Value: \n");
 	for (int i = 0; i < col1; i++){
         for (int j = 0; j < col3; j++){
-            printf("%d", value[i*col3+j]);
+            printf("%d ", value[i*col3+j]);
         }
+		printf("\n");
     }
+	printf("\n");
 
 	printf("\nhampir jalan\n");
 
 	while(1){
-		if (*andri == 5) {printf("andri received = %d\n", *andri); break;}
+		if (*andri == 5) {printf("andri received = %d\n", *andri); *andri = 0; break;}
 		printf("waiting for andri...\n");
 		sleep(1);
 	}
