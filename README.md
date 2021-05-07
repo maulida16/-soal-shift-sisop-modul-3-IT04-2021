@@ -57,4 +57,55 @@
 * Fungsi `matrixprep()` digunakan untuk menginputkan angka yang akan dimasukkan ke dalam matriks. 
 * Pertama dilakukan inisiasi variabel `a = 0` sebagai parameter untuk menjalankan iterasi pemasukan nilai pada matriks 1. Setelah itu dideklarasikan ukuran dari matriks 1 di dalam variabel `rem` dan selanjutnya adalah menjalankan perulangan for untuk memasukkan nilai pada baris dan kolom matriks.
 * Pemasukan nilai untuk matriks oleh user dilakukan dengan cara mengeluarkan output berisi perintah untuk memasukkan nilai pada matriks dengan posisi `rem-(i*col2+j)` dan setelah itu inputan nilai akan disimpan dengan fungsi `scanf`.
-* 
+* Setelah iterasi pemasukan nilai pada matriks 1 terselesaikan, akan dilanjutkan dengan matriks 2 karena setelah menjalankan proses pertama, nilai dari variabel a akan bertambah.
+
+void matrixprint(int param){
+	
+	if (param == 0){
+
+		for(int i = 0; i < col1; i++){
+			for(int j = 0; j < col3; j++){
+				printf("%d ", temp[i][j]);
+			}
+			printf("\n");
+		}
+
+		printf("\n");
+
+	}
+
+	else if (param == 1){
+
+		for(int i = 0; i < col1; i++){
+			for(int j = 0; j < col2; j++){
+				// printf("Halo ");
+				printf("%d ", arr1[i][j]);
+			}
+			printf("\n");
+		}
+
+		printf("\n");
+	}
+
+	else if (param == 2){
+
+		for(int i = 0; i < col2; i++){
+			for(int j = 0; j < col3; j++){
+				printf("%d ", arr2[i][j]);
+			}
+			
+			printf("\n");
+		}
+
+		printf("\n");
+	}
+
+	else {
+		matrixprint(1); matrixprint(2); matrixprint(0);
+	}
+
+}
+
+* Fungsi `matrixprint` digunakan untuk mengeluarkan hasil perkalian antar matriks.
+* Fungsi ini memerlukan sebuah parameter yang digunakan sebagai percabangan kondisi untuk nilai matriks apa yang akan diprint.
+* Kondisi pertama dimana parameter bernilai 0 akan mengeluarkan output dari matriks `temp` yang menyimpan nilai hasil perkalian matriks 1 dan matriks 2.
