@@ -1,38 +1,36 @@
 #include<sys/stat.h>
-#include<sys/types.h>
-#include<sys/wait.h>
 #include<stdio.h>
+#include<unistd.h>
 #include<ctype.h>
 #include<string.h>
 #include<pthread.h>
-#include<unistd.h>
 #include<dirent.h>
 
 pthread_t tid[10000];
 char cwd[1000];
-char folder[1000];
+char dirpath[1000];
 
 void *pindah(void *arg);
 
 int main(int argc, char *argv[]) {
 	getcwd(cwd, sizeof(cwd));
 	int a;
-	memset(folder, '\0', sizeof(folder));
+	
+	if(argc < 2) {
+		printf("argumen invalid");
+	}
 
 	if(strcmp(argv[1], "-f") == 0) {
-		if(argc < 2) {
-			printf("argumen invalid");
-		}
 		for(int i=2; i<argc; i++) {
 			pthread_create(&tid[i], NULL, pindah, (void *)argv[i]);
 		}
 		for(int j=2; j<argc; j++) {
 			a = pthread_join(tid[j], NULL);
 			if(a == 0) {
-				printf("\nFile %d: Berhasil Dikategorikan", j-1);
+				printf("File %d: Berhasil Dikategorikan\n", j-1);
 			}
 			else {
-				printf("\nFile %d: Sad, gagal :(", j-1);
+				printf("File %d: Sad, gagal :(\n", j-1);
 			}
 		}
 	}
@@ -42,7 +40,7 @@ int main(int argc, char *argv[]) {
 		int i=0;
 		if(strcmp(argv[1], "-d") == 0) {
             		dir = opendir(argv[2]);
-			strcpy(folder, argv[2]);
+			strcpy(dirpath, argv[2]);
 		}
 		else if((argv[1][0]=='*') && (strlen(argv[1])==1)) {
 			dir = opendir(cwd);
@@ -61,60 +59,63 @@ int main(int argc, char *argv[]) {
         for(int j=0; j<i; j++)
         	a = pthread_join(tid[j], NULL);
         	if(a == 0) {
-			printf("\nDirektori sukses disimpan!");
+			printf("Direktori sukses disimpan!\n");
 		}
 		else {
-			printf("\nYah, gagal disimpan :(");
+			printf("Yah, gagal disimpan :(\n");
 		}
         closedir(dir);
-
 	}
 	return 0;
 }
 
 void *pindah(void *arg) {
 	char *fpath = (char *)arg;
-	char *extensi = NULL;
-	extensi = strrchr(fpath, '.');
+	char *hid = NULL;
+	hid = strchr(fpath, '.');
+	char *ext = NULL;
+	ext = strrchr(fpath, '.');
 
-	char ext[1000];
-	memset(ext, '\0', sizeof(ext));
-	if(extensi) {
-		extensi++;
-        	for(int i=0; i<strlen(extensi); i++) {
-               	ext[i] = tolower(extensi[i]);
+	char temp[1000];
+	if(ext) {
+		for(int i=0;i<strlen(ext);i++) {
+               	temp[i] = tolower(ext[i]);
     		}
 	}
-	else strcpy(ext, "Unknown");
+	else if(hid) {
+		strcpy(temp, "Hiddenext++;
+	}
+	else strcpy(temp, "Unknown");
 
     	char *fname = NULL;
     	fname = strrchr(fpath, '/');
-    	if(fname) 
+    	if(fname) {
 		fname++;
+	}
 	else fname = fpath;
 
-	char dirpath[1000];
-	strcpy(dirpath, cwd);
-	strcat(dirpath, "/");
-	strcat(dirpath, ext);
-
-	mkdir(dirpath, S_IRWXU);
-
-	if(strlen(folder) > 1) {
+	char dirname[1000];
+	strcpy(dirname, cwd);
+	strcat(dirname, "/");
+	strcat(dirname, temp);
+	
+	mkdir(dirname, S_IRWXU);
+	
+	if(strlen(dirpath) > 1) {
 		char fullname[1000];
-		strcpy(fullname, folder);
+		strcpy(fullname, dirpath);
 		strcat(fullname, "/");
 		strcat(fullname, fname);
 
-		strcat(dirpath, "/");
-        	strcat(dirpath, fname);
+		strcat(dirname, "/");
+        	strcat(dirname, fname);
 
-        	rename(fullname, dirpath);
+        	rename(fullname, dirname);
 	}
 	else {					
-	    	strcat(dirpath, "/");
-        	strcat(dirpath, fname);
+	    	strcat(dirname, "/");
+        	strcat(dirname, fname);
 
-		rename(fpath, dirpath);
+		rename(fpath, dirname);
 	}
 }
