@@ -83,7 +83,7 @@ void *pindah(void *arg) {
     		}
 	}
 	else if(hid) {
-		strcpy(temp, "Hiddenext++;
+		strcpy(temp, "Hidden");
 	}
 	else strcpy(temp, "Unknown");
 
