@@ -187,3 +187,204 @@
 *  Selanjutnya hasil perkalian kedua matriks yang disimpan pada variabel `temp` akan dimasukkan ke pointer `value`.
 *  Langkah selanjutnya adalah melakukan perulangan `while` untuk menunggu terkoneksi dengan shared memory pada soal 2b. Jika masih menunggu untuk terkoneksi maka program akan mengeluarkan output `printf("waiting for andri...\n");` yang akan berulang setiap 1 detik.
 *  `shmdt(value)` dan  `shmdt(andri)` digunakan untuk melepaskan segmen shared memory yang digunakan.
+
+#### b. Membuat program perhitungan matriks baru dengan inputan matriks dari user dan inputan matris dari soal 2.a. Perhitungannya adalah setiap cel yang berasal dari matriks A menjadi angka untuk faktorial, lalu cel dari matriks B menjadi batas maksimal faktorialnya (dari paling besar ke paling kecil).
+
+	#include <stdio.h>
+	#include <sys/ipc.h>
+	#include <sys/shm.h>
+	#include <unistd.h>
+	#include <pthread.h>
+	#define col1 4
+	#define col2 3
+	#define col3 6
+	#define zero 0
+	
+	pthread_mutex_t softex;
+	int *value, *andri, goal1, goal3, muteks;
+	int hasil[col1*col3];
+	int baru[col1*col3];
+	int final[col1*col3];
+	int argt[col1*col3];
+	pthread_t thread_id[col1*col3];
+	
+* Pertama kami menginputkan library yang akan digunakan, setelah itu men-define beberapa variabel konstan untuk membuat ukuran matriks sesuai dengan yang dibutuhkan.
+* Selanjutnya kami membuat sebuah muteks `pthread_mutex_t softex` dikarenakan program ini akan mengakses shared memory. Lalu variabel-variabel pointer dan array lain yang sekiranya dibutuhkan untuk menjalankan program. `pthread_t thread_id[col1*col3]` digunakan untuk membuat program matriks 4x6.
+
+		int fact(int num){
+			int i = 1;
+			while (num > 1){
+				i *= num;
+				num--;
+			}
+			return i;
+		}
+
+* Fungsi `fact` dibuat untuk menampung sebuah parameter bertipe integer yang akan digunakan untuk melakukan faktorial dari perhitungan matriks.
+
+		void matrixprep(){
+			int rem = col1*col3;;
+			for(int i = 0; i < col1; i++){
+				for(int j = 0; j < col3; j++){
+					printf("Number to input remaining: %d\n", rem-(i*col3+j));
+					scanf("%d", &baru[i*col3+j]);
+					printf("\n");
+				}
+			}
+		}
+		
+* Fungsi `matrixprep` digunakan untuk menyimpan nilai matriks yang telah diinputkan oleh user. Selanjutnya nilai-nilai inputan tadi akan dimasukkan ke dalam variabel array `baru`.
+
+		void* factpthread3(void *z){
+
+			muteks = 0;
+
+			int *goal2 = (int*) z;
+			printf("goal2: %d\n", *goal2);
+			printf("%d vs %d\n", hasil[*goal2], baru[*goal2]);
+
+			if (hasil[*goal2] >= baru[*goal2]){
+
+				final[*goal2] += fact(hasil[*goal2])/fact(hasil[*goal2]-baru[*goal2]);
+				printf("final %d: %d\n", *goal2, final[*goal2]);
+
+			}
+
+			else if (hasil[*goal2] < baru[*goal2]){
+
+				final[*goal2] += fact(hasil[*goal2]);
+				printf("final %d: %d\n", *goal2, final[*goal2]);
+
+			}
+			else final[*goal2] += 0;
+			muteks = 1;
+			printf("/n");
+
+		}
+
+* Selanjutnya adalah membuat fungsi thread `factpthread3` untuk perhitungan setiap cell dalam matriks. Selanjutnya kami menginisiasi variabel muteks yang digunakan untuk mencegah threadnya saling berebut memori.
+* Dilakukan sebuah pendeklarasian variabel pointer bernama `goal2` yang digunakan untuk mengakses nilai integer per tiap cell dari matriks.
+* Setelah itu dikeluarkan output untuk mengeluarkan nilai tiap cell dari matriks pertama dan matriks kedua.
+* Selanjutnya diberikan sebuah kondisi dimana jika nilai cell dari matriks pertama lebih besar sama dengan matriks kedua, maka nilai variabel array `final` akan menyimpan nilai perhitungan sesuai yang diberikan di soal yaitu memfaktorialkan nilai cell dari matriks 1 dibagi dengan pengurangan nilai cell matriks 1 dan 2 di dalam fungsi `fact` kemudian hasil dari perhitungan akan dikeluarkan.
+* Kondisi kedua dimana nilai cell dari matriks 1 kurang dari nilai cell matriks 2, maka perhitungan hanya akan melakukan faktorial pada nilai dari cell matriks 1.
+* Kondisi terkahir adalah jika nilai cell yang diakses oleh pointer `goal2` bernilai 0, maka hasilnya juga akan bernilai 0 atau tidak terjadi perhitungan.
+
+		void matrixprint(int param){
+
+			if (param == 0){
+				printf("Value:\n");
+				for(int i = 0; i < col1; i++){
+					for(int j = 0; j < col3; j++){
+						printf("%d ", value[i*col3+j]);
+					}
+					printf("\n");
+				}
+
+				printf("\n");
+
+			}
+
+			else if (param == 1){
+				printf("Baru:\n");
+				for(int i = 0; i < col1; i++){
+					for(int j = 0; j < col3; j++){
+						printf("%d ", baru[i*col3+j]);
+					}
+					printf("\n");
+				}
+
+				printf("\n");
+			}
+
+			else if (param == 2){
+				printf("Final:\n");
+				for(int i = 0; i < col1; i++){
+					for(int j = 0; j < col3; j++){
+						// printf("Halo ");
+						printf("%d ", final[i*col3+j]);
+					}
+					printf("\n");
+				}
+
+				printf("\n");
+			}
+
+			else {
+				matrixprint(0); matrixprint(1); matrixprint(2);
+			}
+
+		}
+
+* Fungsi `matrixprint` digunakan untuk mengeluarkan output matriks yang sudah diperhitungkan. Fungsi ini akan mengambil nilai parameter dari variabel integer bernama `param`.
+* Kondisi pertama jika parameter bernilai 0, maka fungsi akan mengeluarkan nilai matriks dari variabel array `value` dimana variabel ini diambil dari soal no 2.a
+* Kondisi kedua jika parameter bernilai 1, maka fungsi akan mengeluarkan nilai matriks dari variabel array `baru`.
+* Kondisi ketiga jika parameter bernilai 2, maka fungsi akan mengeluarkan nilai matriks dari variabel array `final`.
+* Ketika tidak mendapat input selain ketiga parameter di atas, maka fungsi akan mengeluarkan ketiga kondisi secara urut.
+
+
+			void main()
+		{
+		    key_t key = 1234;
+
+		    int shmid = shmget(key, sizeof(int), IPC_CREAT | 0666);
+		    value = shmat(shmid, NULL, 0);
+		    andri = shmat(shmid, NULL, 0);
+
+			matrixprep();
+
+		    for (int i = 0; i < col1; i++){
+			for (int j = 0; j < col3; j++){
+			    hasil[i*col3+j] = value[i*col3+j];
+			}
+		    }
+
+			printf("\n");
+
+			for (int i = 0; i < col1; i++){
+			for (int j = 0; j < col3; j++){
+
+					goal1 = i*col3+j;
+					printf("goal1: %d\n", goal1);
+
+					if (!(goal3 = pthread_create(&(thread_id[goal1]), NULL, &factpthread3, (void *) &goal1)))
+				pthread_join(thread_id[i*col3+j], NULL);
+
+			}
+		    }
+
+			matrixprint(3);
+
+			*andri = 5;
+
+		    shmdt(value);
+			shmdt(andri);
+		    shmctl(shmid, IPC_RMID, NULL);
+		}
+		
+* `int shmid = shmget(key, sizeof(int), IPC_CREAT | 0666);` digunakan untuk shared memory identifier yang memuat beberapa parameter untuk membuat shared memory. 
+*  Berikutnya baik pada variabel `value` dan `andri` dideklarasikan dengan perintah `shmat(shmid, NULL, 0)` untuk mengakses alamat shared memory yang sudah diindentifikasi oleh `shmid`.
+*  Dilanjutkan dengan memanggil fungsi `matrixprep` untuk mendapatkan inputan nilai per cell matriks dari user. 
+*  
+*  Selanjutnya hasil perkalian kedua matriks yang disimpan pada variabel `temp` akan dimasukkan ke pointer `value`.
+*  Langkah selanjutnya adalah melakukan perulangan `while` untuk menunggu terkoneksi dengan shared memory pada soal 2b. Jika masih menunggu untuk terkoneksi maka program akan mengeluarkan output `printf("waiting for andri...\n");` yang akan berulang setiap 1 detik.
+*  `shmdt(value)` dan  `shmdt(andri)` digunakan untuk melepaskan segmen shared memory yang digunakan.
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+
+
