@@ -78,8 +78,9 @@ void *pindah(void *arg) {
 
 	char temp[1000];
 	if(ext) {
+		ext++;
 		for(int i=0;i<strlen(ext);i++) {
-               	temp[i] = tolower(ext[i]);
+               		temp[i] = tolower(ext[i]);
     		}
 	}
 	else if(hid) {
