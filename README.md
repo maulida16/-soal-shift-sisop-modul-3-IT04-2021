@@ -371,7 +371,146 @@
 		
 		
 		
+## Soal 3 : Membuat opsi untuk menjalankan program
+
+#### a. opsi -f: digunakan untuk mengkategorikan file untuk file-file tertentu sebagai argumen.
+  
+		#include<sys/stat.h>
+		#include<stdio.h>
+		#include<unistd.h>
+		#include<ctype.h>
+		#include<string.h>
+		#include<pthread.h>
+		#include<dirent.h>
+
+		pthread_t tid[10000];
+		char cwd[1000];
+		char dirpath[1000];
+
+		void *pindah(void *arg);
+
+* Pertama kami menginputkan beberapa library yang akan digunakan. Setelah itu kami membuat thread dan beberapa variabel array, juga sebuah pointer bernama `pindah`.
+
+		int main(int argc, char *argv[]) {
+			getcwd(cwd, sizeof(cwd));
+			int a;
+
+			if(argc < 2) {
+				printf("argumen invalid");
+			}
+
+			if(strcmp(argv[1], "-f") == 0) {
+				for(int i=2; i<argc; i++) {
+					pthread_create(&tid[i], NULL, pindah, (void *)argv[i]);
+				}
+				for(int j=2; j<argc; j++) {
+					a = pthread_join(tid[j], NULL);
+					if(a == 0) {
+						printf("File %d: Berhasil Dikategorikan\n", j-1);
+					}
+					else {
+						printf("File %d: Sad, gagal :(\n", j-1);
+					}
+				}
+			}
+			
+* Di fungsi `main` diperlukan dua parameter yaitu sebuah variabel dan sebuah pointer.
+* Pertama dilakukan pengambilan path dari direktori saat ini menggunakan fungsi `getcwd` yang menyimpan path direktori saat ini di dalam sebuah buffer yaitu `cwd`
+* Langkah kedua adalah mengecek apakah argumen yang diberikan sudah benar atau masih salah menggunakan `if(argc < 2)` karena jumlah argumen yang diberikan seharusnya lebih dari 2.
+* Selanjutnya adalah membuat sebuah perulangan `for(int i=2; i<argc; i++)` dengan opsi `-f` yang akan membuat thread untuk mengategorikan sejumlah file. Selanjutnya thread akan ditunggu hingga selesai menggunakan `a = pthread_join(tid[j], NULL);` dan jika thread pertama berhasil dijalankan maka akan mengeluarkan output "Berhasil Dikategorikan" dan melanjutkan ke perulangan thread berikutnya. Jika thread pertama tidak berhasil dijalankan, maka akan mengeluarkan output "Sad, gagal :("
+
+
+			else {
+				DIR *dir;
+				struct dirent *tmp;
+				int i=0;
+				if(strcmp(argv[1], "-d") == 0) {
+					dir = opendir(argv[2]);
+					strcpy(dirpath, argv[2]);
+				}
+				else if((argv[1][0]=='*') && (strlen(argv[1])==1)) {
+					dir = opendir(cwd);
+				}
+				else {
+					printf("argumen invalid");
+				}
+
+				while((dir!=NULL) && (tmp=readdir(dir))) {
+			    if(strcmp(tmp->d_name, ".")==0 || strcmp(tmp->d_name, "..")==0 || strcmp(tmp->d_name, "soal3.c")==0 || strcmp(tmp->d_name, "soal3")==0 || tmp->d_type==DT_DIR) 
+					continue;
+
+			    pthread_create(&tid[i], NULL, pindah, tmp->d_name);
+			    i++;
+			}
+			for(int j=0; j<i; j++)
+				a = pthread_join(tid[j], NULL);
+				if(a == 0) {
+					printf("Direktori sukses disimpan!\n");
+				}
+				else {
+					printf("Yah, gagal disimpan :(\n");
+				}
+			closedir(dir);
+			}
+			return 0;
+		}
 		
+
+* Selanjutnya adalah membuat direktori baru sebagai direktori pengkategorian untuk masing-masing ekstensi file.
+
+		void *pindah(void *arg) {
+			char *fpath = (char *)arg;
+			char *hid = NULL;
+			hid = strchr(fpath, '.');
+			char *ext = NULL;
+			ext = strrchr(fpath, '.');
+
+			char temp[1000];
+			if(ext) {
+				ext++;
+				for(int i=0;i<strlen(ext);i++) {
+					temp[i] = tolower(ext[i]);
+				}
+			}
+			else if(hid) {
+				strcpy(temp, "Hidden");
+			}
+			else strcpy(temp, "Unknown");
+
+			char *fname = NULL;
+			fname = strrchr(fpath, '/');
+			if(fname) {
+				fname++;
+			}
+			else fname = fpath;
+
+			char dirname[1000];
+			strcpy(dirname, cwd);
+			strcat(dirname, "/");
+			strcat(dirname, temp);
+
+			mkdir(dirname, S_IRWXU);
+
+			if(strlen(dirpath) > 1) {
+				char fullname[1000];
+				strcpy(fullname, dirpath);
+				strcat(fullname, "/");
+				strcat(fullname, fname);
+
+				strcat(dirname, "/");
+				strcat(dirname, fname);
+
+				rename(fullname, dirname);
+			}
+			else {					
+				strcat(dirname, "/");
+				strcat(dirname, fname);
+
+				rename(fpath, dirname);
+			}
+		}
+
+
 		
 		
 		
