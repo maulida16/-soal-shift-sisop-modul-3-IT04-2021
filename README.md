@@ -6,6 +6,459 @@
 
 ### Pembahasan Soal
 
+## Soal 1
+
+#### Keverk adalah orang yang cukup ambisius dan terkenal di angkatannya. Sebelum dia menjadi ketua departemen di HMTC, dia pernah mengerjakan suatu proyek dimana keverk tersebut meminta untuk membuat server database buku. Proyek ini diminta agar dapat digunakan oleh pemilik aplikasi dan diharapkan bantuannya dari pengguna aplikasi ini. Di dalam proyek itu, Keverk diminta: 
+
+#### a. Pada saat client tersambung dengan server, terdapat dua pilihan pertama, yaitu register dan login. Jika memilih register, client akan diminta input id dan passwordnya untuk dikirimkan ke server. User juga dapat melakukan login. Login berhasil jika id dan password yang dikirim dari aplikasi client sesuai dengan list akun yang ada didalam aplikasi server. Sistem ini juga dapat menerima multi-connections. Koneksi terhitung ketika aplikasi client tersambung dengan server. Jika terdapat 2 koneksi atau lebih maka harus menunggu sampai client pertama keluar untuk bisa melakukan login dan mengakses aplikasinya. Keverk menginginkan lokasi penyimpanan id dan password pada file bernama akun.txt dengan format :
+	
+	akun.txt
+	id:password
+	id2:password2
+
+###### Server Side
+
+			#include <stdio.h>
+			#include <sys/socket.h>
+			#include <stdlib.h>
+			#include <netinet/in.h>
+			#include <string.h>
+			#include <unistd.h>
+			#include <dirent.h>
+			#include <sys/types.h>
+			#include <sys/stat.h>
+			#define BUFFER_MAX_LENGTH 1024
+			#define PORT 8080
+
+			int file_created = 0, session = 0;
+			char *trade, kosongan[512];
+			int registration();
+			int login();
+			int foldermaker();
+			int tsvadmin();
+			
+* Pertama kami menginputkan beberapa library untuk digunakan dan mendeklarasikan beberapa variabel integer, variabel array, beberapa fungsi dan sebuah pointer.
+
+			int main(int argc, char const *argv[]) {
+			    int server_fd, new_socket, valread, status = 1;
+			    struct sockaddr_in address;
+			    int opt = 1;
+			    int addrlen = sizeof(address);
+			    char buffer[1024] = {0}, buffer2[1024] = {0};
+			    char *hello = "You are connected\n";
+
+* Di dalam fungsi main kami mendeklarasikan beberapa variabel dan fungsi untuk menjalankan fungsi sokcet client-server.
+
+			    foldermaker();
+
+			    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
+				perror("socket failed");
+				exit(EXIT_FAILURE);
+			    }
+
+			    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) {
+				perror("setsockopt");
+				exit(EXIT_FAILURE);
+			    }
+
+			    address.sin_family = AF_INET;
+			    address.sin_addr.s_addr = INADDR_ANY;
+			    address.sin_port = htons( PORT );
+
+			    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address))<0) {
+				perror("bind failed");
+				exit(EXIT_FAILURE);
+			    }
+
+			    int listening = listen(server_fd, 3);
+			    if (listening < 0) {
+				perror("listen");
+				exit(EXIT_FAILURE);
+			    }
+
+* Untuk menjalankan client-server sendiri kami membuat beberapa kondisi untuk mengecek bahwa client dan server terhubung.
+
+			    while(status == 1){
+				printf("status: connected\n");
+					if (session == 0) printf("Loginnya kosong lur!\n");
+				if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen))<0) {
+				    perror("accept");
+				} 
+				else {
+
+				    printf("--client found (%d)\n", new_socket);                
+				    send(new_socket , hello , strlen(hello) , 0 );
+				    char *reply = "--Server received your message!\n";
+
+				    while((read(new_socket , buffer, 1024)) > 0 && (printf("--now stand by...\n"))){
+					if(strcmp(buffer,"break") == 0){
+					    close(new_socket);
+					    session = 0;
+					    printf("--client %d has been disconnected\n", new_socket);
+					}
+
+					else if(strcmp(buffer,"shutdown") == 0){
+					    close(new_socket);
+					    printf("--client %d has been requested shutdown\n", new_socket);
+					    status = 0;
+					    break;
+					}
+
+* Ketika client-server sudah berhasil berjalan, maka program akan membuat dua kondisi. Kondisi yang pertama ketika client server gagal mendapatkan informasi dari client, maka akan terjadi error. Kondisi yang kedua ketika client berhasil terhubung dengan server, maka server akan mengirim beberapa pesan selamat datang. Saat server mengirim pesan selamat datang terjadi beberapa kondisi, yang pertama jika client mengirim string "break" sehingga client-server akan ter-disconnect dan akan memulai membuat socket baru lagi. Kemungkinan kedua ketika client mengirim string "shutdown", client akan terputus total dari server.
+
+					else {
+					    char *data, *id_user;
+					    int i = 1;
+					    if((strcmp(buffer,"register")) == 0 && session == 0){
+
+						while(1){
+						    if(i == 1){
+							memset(buffer, 0, sizeof(buffer));
+							strcpy(kosongan, "\n--You're just requesting [REGISTER]\nInsert ID: ");
+							send(new_socket, kosongan, strlen(kosongan)+1, 0);
+							memset(kosongan, 0, sizeof(kosongan));
+
+							if((read(new_socket , buffer, 1024)) < 0) printf("buffer error");
+							data = (char*)malloc(sizeof(strlen(buffer)+1));
+
+							strncpy(data, buffer, strlen(buffer));
+							strcat(data, ":");
+							printf("id: %s\n", data);
+							i = 2;
+						    }
+
+						    if(i == 2){
+							memset(buffer, 0, sizeof(buffer));
+							strcpy(kosongan, "\n--Now insert your password: ");
+							send(new_socket, kosongan, strlen(kosongan)+1, 0);
+							memset(kosongan, 0, sizeof(kosongan));
+
+							if((read(new_socket , buffer, 1024)) < 0) printf("buffer error");
+							printf("password: %s\n", buffer);
+
+							data = realloc(data, (sizeof(data)+strlen(buffer)+1));
+							strncat(data, buffer, strlen(buffer));
+							i = 3;
+						    }
+
+						    // strncpy(id_user, buffer2, strlen(buffer2));
+						    printf("\n[SUCCESS]\n--id and password: %s\n", data);
+
+						    if(registration(data) && session == 0){
+							printf("--Register success!\n");
+							free(data);
+							printf("--data habis di-free: \n");
+							i = 0; break;
+						    } else {
+							printf("--Register failed\n");
+							i = 1;
+						    }
+						    free(data);
+						}
+					    }
+
+* Kemungkinan ketiga jika client mengirim string "register" dan slot client masih kosong, maka client akan dikirimkan beberapa inputan yang perlu diisi seperti user ID dan password. Data userID dan password akan disimpan ke dalam variabel `data`. Jika register berhasil maka program akan mengirimkan output "--Register success!" dan jika gagal, maka program akan mengeluarkan output "--Register failed!".  
+
+					    else if(strcmp(buffer,"login") == 0){
+						if (session == 1) {
+						strcpy(kosongan, "Masih ada orang lur!\n");
+						send(new_socket, kosongan, strlen(kosongan)+1, 0);
+						memset(kosongan, 0, sizeof(kosongan));
+						i == 0;
+						}
+						while(i == 1 && session == 0){
+						    printf("ia: %d\n", i);
+						    if(i == 1){
+							printf("ib: %d\n", i);
+							memset(buffer, 0, sizeof(buffer));
+							char *prompt = "\n--You're just requesting [LOGIN]\nInsert ID: ";
+							send(new_socket , prompt, strlen(prompt), 0);
+
+							if((read(new_socket , buffer, 1024)) < 0) printf("buffer error");
+							data = (char*)malloc(sizeof(strlen(buffer)+1));
+
+							strncpy(data, buffer, strlen(buffer));
+							strcat(data, ":");
+							printf("id: %s\n", data);
+							i = 2;
+						    }
+
+						    if(i == 2){
+							printf("i: %d\n", i);
+							memset(buffer, 0, sizeof(buffer));
+							char *prompt2 = "\n--Now insert your password: ";
+							// trade = (char* )malloc(strlen(prompt2)+1); strncpy(trade, prompt2, strlen(prompt2));
+							send(new_socket , prompt2, strlen(prompt2), 0);
+
+							if((read(new_socket , buffer, 1024)) < 0) printf("buffer error");
+							printf("password: %s\n", buffer);
+
+							data = realloc(data, (sizeof(data)+strlen(buffer)+1));
+							strncat(data, buffer, strlen(buffer));
+							// strncpy(data, buffer, strlen(buffer));
+							i = 3;
+						    }
+
+						    printf("\n[SUCCESS]\n--id and password: %s\n", data);
+						    printf("i: %d\n", i);
+						    if(login(data) == 1 && i == 3){
+							char *prompt3 = "--Login Success!\n";
+							printf("--Login success!\n"); send(new_socket, prompt3, strlen(prompt3)+1, 0);
+							free(data);
+							printf("--data habis di-free: \n");
+							session = 1;
+							i = 0; break;
+						    } 
+						    else {
+							char *prompt3 = "--Login Failed!\n";
+							printf("--Login failed\n"); send(new_socket, prompt3, strlen(prompt3), 0);
+							i = 1;
+							printf("ic: %d\n", i);
+						    }
+						    free(data);
+						    printf("--data habis di-free(login): \n");
+						}
+						// login();
+					    }
+
+* Kemungkinan keempat adalah ketika client mengirimkan string "Login" maka server akan menampilkan permintaan untuk data yang harus diisi dan mencocokkannya dengan variabel `data`. Jika register berhasil maka program akan mengirimkan output "--Login success!" dan jika gagal, maka program akan mengeluarkan output "--Login failed!".  
+
+#### b. Sistem memiliki sebuah database yang bernama files.tsv. Isi dari files.tsv ini adalah path file saat berada di server, publisher, dan tahun publikasi. Setiap penambahan dan penghapusan file pada folder file yang bernama  FILES pada server akan memengaruhi isi dari files.tsv. Folder FILES otomatis dibuat saat server dijalankan. 
+
+
+						else if(strcmp(buffer,"add") == 0){
+							if (session == 0) {
+								strcpy(kosongan, "Login dulu lur!\n");
+								send(new_socket, kosongan, strlen(kosongan)+1, 0);
+								memset(kosongan, 0, sizeof(kosongan));
+								// break;
+							}
+							send(new_socket , reply , strlen(reply) , 0);
+									while(i == 1 && session == 1){
+						    if(i == 1){
+							memset(buffer, 0, sizeof(buffer));
+							strcpy(kosongan, "\n--You're just requesting [ADD]\nInsert Publisher: ");
+							send(new_socket, kosongan, strlen(kosongan)+1, 0);
+							memset(kosongan, 0, sizeof(kosongan));
+
+
+							if((read(new_socket , buffer, 1024)) < 0) printf("buffer error");
+							data = (char*)malloc(sizeof(strlen(buffer)+1));
+
+							strncpy(data, buffer, strlen(buffer));
+							strcat(data, "\t");
+							printf("publisher(%d): %s\n", i, data);
+							i = 2;
+						    }
+
+						    if(i == 2){
+								do{
+									i++;
+									memset(buffer, 0, sizeof(buffer));
+									if(i == 3) strcpy(kosongan, "\n--Now insert your Detail (year): ");
+									else if (i == 4) strcpy(kosongan, "\n--Now insert your Detail (path): ");
+									else if (i == 5) strcpy(kosongan, "UPLOAD");
+									send(new_socket, kosongan, strlen(kosongan)+1, 0);
+									memset(kosongan, 0, sizeof(kosongan));
+
+									if((read(new_socket , buffer, 1024)) < 0) printf("buffer error");
+									printf("details: %s\n", buffer);
+
+									if(i< 5){
+										data = realloc(data, (strlen(data)+strlen(buffer)+1));
+										strncat(data, buffer, strlen(buffer));
+										if(i == 3){
+											data = realloc(data, strlen(data)+1);
+											strcat(data, "\t");
+										}
+									}
+								printf("detail(%d): %s\n", i, data);
+											}
+											while (i < 5);
+						    }
+
+						    // strncpy(id_user, buffer2, strlen(buffer2));
+						    printf("\n[SUCCESS]\n--file data: %s\n", data);
+
+						    if(tsvadmin(data,1,new_socket) && session == 1){
+							printf("--Input success!\n");
+											free(data);
+							printf("--data habis di-free: \n");
+							i = 0; break;
+						    } else {
+							printf("--Input failed\n");
+							i = 1;
+						    }
+						    free(data);
+						}
+					    }
+								else if(strcmp(buffer, "see") == 0){
+									if (session == 0) {
+										strcpy(kosongan, "Login dulu lur!\n");
+										send(new_socket, kosongan, strlen(kosongan)+1, 0);
+										memset(kosongan, 0, sizeof(kosongan));
+										// break;
+									}
+							send(new_socket , reply , strlen(reply) , 0);
+									while(i == 1 && session == 1){
+										char *data2 = "test";
+						    if(i == 1){
+							memset(buffer, 0, sizeof(buffer));
+											strcpy(kosongan, "\n--You're just requesting [SEE]\nInsert Publisher: ");
+											send(new_socket, kosongan, strlen(kosongan)+1, 0);
+											memset(kosongan, 0, sizeof(kosongan));
+							i = 2;
+						    }
+
+						    if(tsvadmin(data2,0,new_socket) && session == 1){
+							printf("--Input success!\n");
+							printf("--data habis di-free: \n");
+											// free(data2);
+							i = 0; break;
+						    } else {
+							printf("--Input failed\n");
+							i = 1;
+						    }
+						    // free(data);
+					    }
+
+								}
+							printf("last message: [%s] \twith size of: [%ld]\n", buffer, strlen(buffer));
+					memset(buffer, 0, sizeof(buffer));
+
+							// continue;
+					send(new_socket , reply , strlen(reply) , 0);
+					}
+				    }
+				    printf("\n--Keluar loop\n");
+				}
+
+			    }
+
+			    return 0;
+			}
+
+			int registration(char *passing){
+
+			int errno;
+
+			if((strlen(passing)) < 3 || login(passing) == 1) errno = 0;
+
+			else {
+			    printf("registration for: %s\n", passing);
+			    FILE *target = fopen("akun.txt", "a+");
+
+			    fprintf(target, "%s", passing);
+			    fprintf(target, "\n");
+			    fclose(target);
+			}
+
+			return errno;
+			}
+
+			int login(char *passing){
+
+			char str[512];
+			int tempChar, found = 0;
+			FILE *target = fopen("akun.txt", "r");
+
+			while(fgets(str,1024,target)){
+
+			    if(strncmp(str,passing,strlen(passing)) == 0 && strlen(passing) > 2){
+				found = 1;
+				break;
+			    }
+			    // puts(str);
+			}
+
+			fclose(target);
+
+			return found;
+
+			}
+
+			int foldermaker(){
+
+			    DIR *dp;
+			    struct dirent *ep;
+			    char path[100];
+
+			    printf("Enter path to list files: ");
+			    getcwd(path, 100);
+			    printf("%s\n", path);
+			    // scanf("%s", path);
+
+			    dp = opendir(path);
+
+				if (dp != NULL) {
+
+					char *FILES= "FILES";
+					int foldernya = 0;
+					while ((ep = readdir (dp))) {
+						//   puts (ep->d_name);
+						if(strncmp(ep->d_name, FILES, strlen(FILES)) == 0) printf("Ada foldernya!\n");
+						else {
+							foldernya++;
+							// printf("Nggak ada lur!\n");
+						}
+
+					}
+
+					if(foldernya != 0){
+						mkdir("FILES", 0777);
+					}
+
+				(void) closedir (dp);
+				} else perror ("Couldn't open the directory");
+
+			    return 0;
+			}
+
+			int tsvadmin(char *passing, int mode, int new_socket){
+
+				char str[512], daftar[512];
+				char* halo;
+				int errno = 0, count = 0;
+
+				if(mode == 0){
+					FILE *target = fopen("files.tsv", "r+");
+					fgets(str,1024,target);
+					halo = strtok(str, "\t");
+					while(halo != 0){
+						// puts(str);
+						printf("%d. %s\n", count, halo);
+						strtok(NULL, "\t");
+						// strcpy((char*)daftar[count], str);
+						// // daftar[count] = str;
+						++count;
+						// send(new_socket, str, strlen(str), 0);
+					}
+					// for(int i = 0; i < count; i++){
+
+					// 	printf("%d. %s\n", i, daftar[i]);
+
+					// }
+					errno = 1;
+				}
+				if(mode == 1){
+
+					if((strlen(passing)) < 3) errno = 0;
+
+					else {
+						printf("writing for: %s\n", passing);
+						FILE *target = fopen("files.tsv", "a+");
+
+						fprintf(target, "%s", passing);
+						fprintf(target, "\n");
+						fclose(target);
+						errno = 1;
+					}
+
+				}
+
+			return errno;
+			}
+
 ## Soal 2
 
 #### a. Membuat program perkalian matrix (4x3 dengan 3x6) dan menampilkan hasilnya. Matriks nantinya akan berisi angka 1-20 (tidak perlu dibuat filter angka).
@@ -441,6 +894,8 @@
 
 * Masuk ke parent proses dibuat file STDIN dan eksekusi `head`.
 
+## Soal 3
+
 #### a. opsi -f: digunakan untuk mengkategorikan file untuk file-file tertentu sebagai argumen.
 #### b. opsi -d: digunakan untuk mengkategorikan file dalam directory tertentu sebagai argumen.
 #### c. opsi * : digunakan untuk mengkategorikan file untuk seluruh file dalam current working directory saat program dijalankan.
@@ -592,3 +1047,31 @@
 * Lalu ada fungsi `mkdir(dirname, S_IRWXU);` untuk membuat direktori baru.
 * Berikutnya ada kondisi untuk memenuhi opsi `-d`  yaitu pertama membuat array `fullname` untuk menyimpan path yang akan dibuat dan selanjutnya memindahkan file yang ada pada `fullname` ke `dirname`.
 * Kondisi lain adalah untuk memnuhi opsi `*`
+
+####  Dokumentasi:
+
+Folder untuk testing dari asisten
+![1621777785524](https://user-images.githubusercontent.com/73152464/119263477-68911c00-bc09-11eb-9ffb-e8a0b69f59a6.jpg)
+
+##### Menjalankan perintah -f
+![1621777934659](https://user-images.githubusercontent.com/73152464/119263538-a4c47c80-bc09-11eb-8950-1372ce7c6ea9.jpg)
+
+![1621777953474](https://user-images.githubusercontent.com/73152464/119263559-bad23d00-bc09-11eb-9cfb-82b5847f8cdc.jpg)
+
+##### Menjalankan perintah -d
+![1621778021503](https://user-images.githubusercontent.com/73152464/119263590-d89fa200-bc09-11eb-9c7e-1164117b1e10.jpg)
+
+![1621778050307](https://user-images.githubusercontent.com/73152464/119263600-eb19db80-bc09-11eb-89e8-db7882302d4a.jpg)
+
+##### Menjalankan perintah *
+![1621778210275](https://user-images.githubusercontent.com/73152464/119263619-fd941500-bc09-11eb-98e8-9a96b363a911.jpg)
+
+![1621778230285](https://user-images.githubusercontent.com/73152464/119263629-0d135e00-bc0a-11eb-8c16-04d7c8622bed.jpg)
+
+#### Kendala:
+* Direktori hidden tidak dapat muncul
+
+
+
+
+
