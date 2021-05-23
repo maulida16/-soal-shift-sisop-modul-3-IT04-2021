@@ -374,6 +374,8 @@
 ## Soal 3 : Membuat opsi untuk menjalankan program
 
 #### a. opsi -f: digunakan untuk mengkategorikan file untuk file-file tertentu sebagai argumen.
+#### b. opsi -d: digunakan untuk mengkategorikan file dalam directory tertentu sebagai argumen.
+#### c. opsi * : digunakan untuk mengkategorikan file untuk seluruh file dalam current working directory saat program dijalankan.
   
 		#include<sys/stat.h>
 		#include<stdio.h>
@@ -428,35 +430,41 @@
 					dir = opendir(argv[2]);
 					strcpy(dirpath, argv[2]);
 				}
-				else if((argv[1][0]=='*') && (strlen(argv[1])==1)) {
-					dir = opendir(cwd);
-				}
-				else {
-					printf("argumen invalid");
-				}
-
-				while((dir!=NULL) && (tmp=readdir(dir))) {
-			    if(strcmp(tmp->d_name, ".")==0 || strcmp(tmp->d_name, "..")==0 || strcmp(tmp->d_name, "soal3.c")==0 || strcmp(tmp->d_name, "soal3")==0 || tmp->d_type==DT_DIR) 
-					continue;
-
-			    pthread_create(&tid[i], NULL, pindah, tmp->d_name);
-			    i++;
-			}
-			for(int j=0; j<i; j++)
-				a = pthread_join(tid[j], NULL);
-				if(a == 0) {
-					printf("Direktori sukses disimpan!\n");
-				}
-				else {
-					printf("Yah, gagal disimpan :(\n");
-				}
-			closedir(dir);
-			}
-			return 0;
-		}
-		
 
 * Selanjutnya adalah membuat direktori baru sebagai direktori pengkategorian untuk masing-masing ekstensi file.
+* Kondisi kedua adalah jika opsi `-d` diinputkan, maka program akan membuka direktori yang dimaksud pada variabel `dir` dengan fungsi `opendir(argv[2])` dan directory path yang diinputkan pada parameter ke-2 akan disimpan pada variabel array `dirpath` dengan fungsi `strcpy(dirpath, argv[2])`
+
+		else if((argv[1][0]=='*') && (strlen(argv[1])==1)) {
+							dir = opendir(cwd);
+						}
+						else {
+							printf("argumen invalid");
+						}
+
+						while((dir!=NULL) && (tmp=readdir(dir))) {
+					    if(strcmp(tmp->d_name, ".")==0 || strcmp(tmp->d_name, "..")==0 || strcmp(tmp->d_name, "soal3.c")==0 || strcmp(tmp->d_name, "soal3")==0 || tmp->d_type==DT_DIR) 
+							continue;
+
+					    pthread_create(&tid[i], NULL, pindah, tmp->d_name);
+					    i++;
+					}
+					for(int j=0; j<i; j++)
+						a = pthread_join(tid[j], NULL);
+						if(a == 0) {
+							printf("Direktori sukses disimpan!\n");
+						}
+						else {
+							printf("Yah, gagal disimpan :(\n");
+						}
+					closedir(dir);
+					}
+					return 0;
+				}
+
+* Selanjutnya jika opsi yang diinputkan adalah `*` maka variabel `dir` akan membuka working directory yang telah disimpan pada variabel buffer `cwd`. Jika gagal dijalankan/ argumen yang diinputkan tidak memenuhi, maka akan mengeluarkan output "argumen invalid".
+* Berikutnya dilakukan pengeliminasian direktori dan file `soal3.c` serta file `soal3` dengan menggunakan perintah berikut `if(strcmp(tmp->d_name, ".")==0 || strcmp(tmp->d_name, "..")==0 || strcmp(tmp->d_name, "soal3.c")==0 || strcmp(tmp->d_name, "soal3")==0 || tmp->d_type==DT_DIR) `. Jika pengeliminasian ini berhasil, maka dilanjutkan dengan pembuatan thread untuk mengkategorikan seluruh file yang ada di working directory.
+* Selanjutnya thread akan ditunggu hingga selesai. Jika berhasil dijalankan maka akan keluar output "Direktori sukses disimpan!" dan jika gagal maka akan mengeluarkan output "Yah, gagal disimpan"
+
 
 		void *pindah(void *arg) {
 			char *fpath = (char *)arg;
@@ -510,20 +518,9 @@
 			}
 		}
 
-
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-
-
+* Fungsi `pindah` digunakan untuk memindahkan file ke direktori ekstensi masing-masing. Pertama kami melakukan pendeklarasian beberapa variabel pointer yang akan digunakan untuk menjadi parameter jalannya suatu kondisi. Pointer `hid` dan `ext` menyimpan delimiter `.` untuk memastikan bahwa argumen pada `fpath` menyimpan sebuah file. Perbedaannya hanya cara pengecekan saja, jika `ext` mengecek dari kemunculan terakhir, maka `hid` mengecek dari kemunculan terdepan.
+* `ext` akan menjadi sebuah kondisi untuk mengubah huruf pada path direktori menjadi lower case menggunakan fungsi `tolower`. Kondisi lain akan memindahkan file `hidden` dan `unknown` ke variabel `temp`.
+* Selanjutnya adalah membuat path dari direktori extension yang akan dibuat menggunakan fungsi `strcpy` dan `strcat`
+* Lalu ada fungsi `mkdir(dirname, S_IRWXU);` untuk membuat direktori baru.
+* Berikutnya ada kondisi untuk memenuhi opsi `-d`  yaitu pertama membuat array `fullname` untuk menyimpan path yang akan dibuat dan selanjutnya memindahkan file yang ada pada `fullname` ke `dirname`.
+* Kondisi lain adalah untuk memnuhi opsi `*`
