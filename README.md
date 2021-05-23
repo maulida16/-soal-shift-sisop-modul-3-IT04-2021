@@ -8,7 +8,7 @@
 
 ## Soal 1
 
-#### Keverk adalah orang yang cukup ambisius dan terkenal di angkatannya. Sebelum dia menjadi ketua departemen di HMTC, dia pernah mengerjakan suatu proyek dimana keverk tersebut meminta untuk membuat server database buku. Proyek ini diminta agar dapat digunakan oleh pemilik aplikasi dan diharapkan bantuannya dari pengguna aplikasi ini. Di dalam proyek itu, Keverk diminta: 
+Keverk adalah orang yang cukup ambisius dan terkenal di angkatannya. Sebelum dia menjadi ketua departemen di HMTC, dia pernah mengerjakan suatu proyek dimana keverk tersebut meminta untuk membuat server database buku. Proyek ini diminta agar dapat digunakan oleh pemilik aplikasi dan diharapkan bantuannya dari pengguna aplikasi ini. Di dalam proyek itu, Keverk diminta: 
 
 #### a. Pada saat client tersambung dengan server, terdapat dua pilihan pertama, yaitu register dan login. Jika memilih register, client akan diminta input id dan passwordnya untuk dikirimkan ke server. User juga dapat melakukan login. Login berhasil jika id dan password yang dikirim dari aplikasi client sesuai dengan list akun yang ada didalam aplikasi server. Sistem ini juga dapat menerima multi-connections. Koneksi terhitung ketika aplikasi client tersambung dengan server. Jika terdapat 2 koneksi atau lebih maka harus menunggu sampai client pertama keluar untuk bisa melakukan login dan mengakses aplikasinya. Keverk menginginkan lokasi penyimpanan id dan password pada file bernama akun.txt dengan format :
 	
@@ -221,9 +221,30 @@
 						// login();
 					    }
 
-* Kemungkinan keempat adalah ketika client mengirimkan string "Login" maka server akan menampilkan permintaan untuk data yang harus diisi dan mencocokkannya dengan variabel `data`. Jika register berhasil maka program akan mengirimkan output "--Login success!" dan jika gagal, maka program akan mengeluarkan output "--Login failed!".  
+* Kemungkinan keempat adalah ketika client mengirimkan string "Login" maka server akan menampilkan permintaan untuk data yang harus diisi dan mencocokkannya dengan variabel `data`. Jika login berhasil maka program akan mengirimkan output "--Login success!" dan jika gagal, maka program akan mengeluarkan output "--Login failed!".  
 
 #### b. Sistem memiliki sebuah database yang bernama files.tsv. Isi dari files.tsv ini adalah path file saat berada di server, publisher, dan tahun publikasi. Setiap penambahan dan penghapusan file pada folder file yang bernama  FILES pada server akan memengaruhi isi dari files.tsv. Folder FILES otomatis dibuat saat server dijalankan. 
+
+#### Tidak hanya itu, Keverk juga diminta membuat fitur agar client dapat menambah file baru ke dalam server. Direktori FILES memiliki struktur direktori di bawah ini : 
+
+	Direktori FILES 
+	File1.ekstensi
+	File2.ekstensi
+
+#### Pertama client mengirimkan input ke server dengan struktur sebagai berikut :
+	
+	Contoh Command Client :
+		
+	add	
+
+	Output Client Console:
+		
+	Publisher:
+	Tahun Publikasi:
+	Filepath:
+
+
+#### Kemudian, dari aplikasi client akan dimasukan data buku tersebut (perlu diingat bahwa Filepath ini merupakan path file yang akan dikirim ke server). Lalu client nanti akan melakukan pengiriman file ke aplikasi server dengan menggunakan socket. Ketika file diterima di server, maka row dari files.tsv akan bertambah sesuai dengan data terbaru yang ditambahkan.
 
 
 						else if(strcmp(buffer,"add") == 0){
@@ -292,6 +313,15 @@
 						    free(data);
 						}
 					    }
+					    
+* Kemungkinan berikutnya adalah ketika client ingin menambah/ mengirim data client ke database files.tsv. Client tidak memiliki izin untuk input sebelum login. Di sini client menginput beberapa data seperti  `Publisher`, `Detail (year)`, `Detail (path)`. Jika input berhasil maka program akan mengirimkan output "--Input success!" dan jika gagal, maka program akan mengeluarkan output "--Input failed!". 
+
+#### d. Client dapat mendownload file yang telah ada dalam folder FILES di server, sehingga sistem harus dapat mengirim file ke client. Server harus melihat dari files.tsv untuk melakukan pengecekan apakah file tersebut valid. Jika tidak valid, maka mengirimkan pesan error balik ke client. Jika berhasil, file akan dikirim dan akan diterima ke client di folder client tersebut. 
+
+	Contoh Command client
+	download TEMPfile.pdf
+
+
 								else if(strcmp(buffer, "see") == 0){
 									if (session == 0) {
 										strcpy(kosongan, "Login dulu lur!\n");
@@ -304,9 +334,9 @@
 										char *data2 = "test";
 						    if(i == 1){
 							memset(buffer, 0, sizeof(buffer));
-											strcpy(kosongan, "\n--You're just requesting [SEE]\nInsert Publisher: ");
-											send(new_socket, kosongan, strlen(kosongan)+1, 0);
-											memset(kosongan, 0, sizeof(kosongan));
+							strcpy(kosongan, "\n--You're just requesting [SEE]\nInsert Publisher: ");
+							send(new_socket, kosongan, strlen(kosongan)+1, 0);
+							memset(kosongan, 0, sizeof(kosongan));
 							i = 2;
 						    }
 
@@ -337,6 +367,8 @@
 
 			    return 0;
 			}
+			
+* Kemungkinan terakhir adalah ketika client ingin mengecek file.tsv untuk memastikan apakah file tersebut valid atau tidak, maka client harus menginputkan `Publisher` terlebih dahulu.
 
 			int registration(char *passing){
 
@@ -355,6 +387,8 @@
 
 			return errno;
 			}
+
+* Di atas merupakan cuplikan program untuk menjalankan fungsi `registration` pada server.
 
 			int login(char *passing){
 
@@ -376,6 +410,8 @@
 			return found;
 
 			}
+
+* Di atas merupakan cuplikan program untuk menjalankan fungsi `login` pada server.
 
 			int foldermaker(){
 
@@ -458,6 +494,9 @@
 
 			return errno;
 			}
+
+#### Kendala: 
+* Belum selesai mengerjakan
 
 ## Soal 2
 
@@ -894,6 +933,39 @@
 
 * Masuk ke parent proses dibuat file STDIN dan eksekusi `head`.
 
+#### Dokumentasi: 
+Soal 2.a
+
+Menginputkan nilai matriks
+![image](https://user-images.githubusercontent.com/73152464/119264807-d12ec780-bc0e-11eb-9879-1d3d1a9f2caa.png)
+
+Perhitungan perkalian matriks
+![image](https://user-images.githubusercontent.com/73152464/119264973-4ac6b580-bc0f-11eb-83b7-150bf63c4c80.png)
+
+Hasil input kedua matriks dan hasil perkaliannya
+![image](https://user-images.githubusercontent.com/73152464/119265005-63cf6680-bc0f-11eb-9e47-138ab7b9296c.png)
+
+Menunggu program 2.b
+![image](https://user-images.githubusercontent.com/73152464/119265029-73e74600-bc0f-11eb-991f-933d69fe7e21.png)
+
+Soal 2.b
+
+Input matriks baru
+![image](https://user-images.githubusercontent.com/73152464/119265057-8b263380-bc0f-11eb-8307-628308e2c571.png)
+
+Membandingkan nilai cell matriks baru dan matriks lama
+![image](https://user-images.githubusercontent.com/73152464/119265074-99744f80-bc0f-11eb-9d7a-01b0a1f634f7.png)
+
+Hasil perhitungan
+![image](https://user-images.githubusercontent.com/73152464/119265093-ae50e300-bc0f-11eb-983a-471715ac35f4.png)
+
+Soal 2.c
+![image](https://user-images.githubusercontent.com/73152464/119265109-be68c280-bc0f-11eb-80f7-75623de0ce40.png)
+
+#### Kendala:
+* Saat tipe `int` diganti dengan `long long int` program tidak berjalan
+
+
 ## Soal 3
 
 #### a. opsi -f: digunakan untuk mengkategorikan file untuk file-file tertentu sebagai argumen.
@@ -1053,22 +1125,22 @@
 Folder untuk testing dari asisten
 ![1621777785524](https://user-images.githubusercontent.com/73152464/119263477-68911c00-bc09-11eb-9ffb-e8a0b69f59a6.jpg)
 
-##### Menjalankan perintah -f
+Menjalankan perintah -f
 ![1621777934659](https://user-images.githubusercontent.com/73152464/119263538-a4c47c80-bc09-11eb-8950-1372ce7c6ea9.jpg)
 
 ![1621777953474](https://user-images.githubusercontent.com/73152464/119263559-bad23d00-bc09-11eb-9cfb-82b5847f8cdc.jpg)
 
-##### Menjalankan perintah -d
+Menjalankan perintah -d
 ![1621778021503](https://user-images.githubusercontent.com/73152464/119263590-d89fa200-bc09-11eb-9c7e-1164117b1e10.jpg)
 
 ![1621778050307](https://user-images.githubusercontent.com/73152464/119263600-eb19db80-bc09-11eb-89e8-db7882302d4a.jpg)
 
-##### Menjalankan perintah *
+Menjalankan perintah *
 ![1621778210275](https://user-images.githubusercontent.com/73152464/119263619-fd941500-bc09-11eb-98e8-9a96b363a911.jpg)
 
 ![1621778230285](https://user-images.githubusercontent.com/73152464/119263629-0d135e00-bc0a-11eb-8c16-04d7c8622bed.jpg)
 
-#### Kendala:
+Kendala:
 * Direktori hidden tidak dapat muncul
 
 
