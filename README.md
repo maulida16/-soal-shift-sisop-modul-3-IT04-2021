@@ -961,7 +961,7 @@ Soal 2.c
 ![image](https://user-images.githubusercontent.com/73152464/119265109-be68c280-bc0f-11eb-80f7-75623de0ce40.png)
 
 #### Kendala:
-* Saat tipe `int` diganti dengan `long long int` program menjadi bermasalah.
+* Saat tipe `int` diganti dengan `long long int` program menjadi bermasalah. (Sudah berhasil diatasi, kami akhirnya menggunakan u`nsigned long long int`)
 
 
 ## Soal 3
