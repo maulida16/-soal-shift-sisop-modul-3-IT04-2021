@@ -955,7 +955,7 @@ Membandingkan nilai cell matriks baru dan matriks lama
 ![image](https://user-images.githubusercontent.com/73152464/119265074-99744f80-bc0f-11eb-9d7a-01b0a1f634f7.png)
 
 Hasil perhitungan
-![image](https://user-images.githubusercontent.com/73152464/119265093-ae50e300-bc0f-11eb-983a-471715ac35f4.png)
+![image](https://user-images.githubusercontent.com/57520495/119266043-5f0cb180-bc13-11eb-9171-e10e87a50cc0.png)
 
 Soal 2.c
 ![image](https://user-images.githubusercontent.com/73152464/119265109-be68c280-bc0f-11eb-80f7-75623de0ce40.png)
