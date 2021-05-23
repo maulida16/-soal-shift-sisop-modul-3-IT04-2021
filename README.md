@@ -952,7 +952,7 @@ Input matriks baru
 ![image](https://user-images.githubusercontent.com/73152464/119265057-8b263380-bc0f-11eb-8307-628308e2c571.png)
 
 Membandingkan nilai cell matriks baru dan matriks lama
-![image](https://user-images.githubusercontent.com/73152464/119265074-99744f80-bc0f-11eb-9d7a-01b0a1f634f7.png)
+![image](![image](https://user-images.githubusercontent.com/57520495/119266123-b874e080-bc13-11eb-8871-98207f687ca1.png)
 
 Hasil perhitungan
 ![image](https://user-images.githubusercontent.com/57520495/119266043-5f0cb180-bc13-11eb-9171-e10e87a50cc0.png)
