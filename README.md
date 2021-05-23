@@ -362,16 +362,84 @@
 		}
 		
 * `int shmid = shmget(key, sizeof(int), IPC_CREAT | 0666);` digunakan untuk shared memory identifier yang memuat beberapa parameter untuk membuat shared memory. 
-*  Berikutnya baik pada variabel `value` dan `andri` dideklarasikan dengan perintah `shmat(shmid, NULL, 0)` untuk mengakses alamat shared memory yang sudah diindentifikasi oleh `shmid`.
-*  Dilanjutkan dengan memanggil fungsi `matrixprep` untuk mendapatkan inputan nilai per cell matriks dari user. 
-*  
-*  Selanjutnya hasil perkalian kedua matriks yang disimpan pada variabel `temp` akan dimasukkan ke pointer `value`.
-*  Langkah selanjutnya adalah melakukan perulangan `while` untuk menunggu terkoneksi dengan shared memory pada soal 2b. Jika masih menunggu untuk terkoneksi maka program akan mengeluarkan output `printf("waiting for andri...\n");` yang akan berulang setiap 1 detik.
-*  `shmdt(value)` dan  `shmdt(andri)` digunakan untuk melepaskan segmen shared memory yang digunakan.
+* Berikutnya baik pada variabel `value` dan `andri` dideklarasikan dengan perintah `shmat(shmid, NULL, 0)` untuk mengakses alamat shared memory yang sudah diindentifikasi oleh `shmid`.
+* Dilanjutkan dengan memanggil fungsi `matrixprep` untuk mendapatkan inputan nilai per cell matriks dari user. 
+* Selanjutnya adalah melakukan perbandingan nilai cell pada matriks lama dan matriks baru dan dijalankan perhitungannya menggunakan thread.
+* Jika semua proses sudah selesai maka pointer `andri` akan bernilai lima sehingga program pada soal 1.a bisa selesai.
+* `shmdt(value)` dan  `shmdt(andri)` digunakan untuk melepaskan segmen shared memory yang digunakan.
 		
-		
+#### c. Membuat program untuk mengecek 5 proses teratas menggunakan pipe dengan command `ps aux | sort -nrk 3,3 | head -5`	
 		
 ## Soal 3 : Membuat opsi untuk menjalankan program
+
+	#include <stdlib.h>
+	#include <stdio.h>
+	#include <sys/types.h>
+	#include <sys/wait.h>
+	#include <unistd.h>
+
+	int pid, status;
+	int pipe1[2];
+	int pipe2[2];
+
+* Pertama kami menginputkan beberapa library yang akan digunakan serta deklarasi `pipe1` dan `pipe2` yang akan digunakan sebagai pipes.
+
+		int main() {
+			printf("Halo lur!\n");
+		if (pipe(pipe1) == -1){printf("Andri"); exit(1);}
+		if (pipe(pipe2) == -1){printf("Andri lagi"); exit(1);}
+
+* Di fungsi `main`, yang pertama kali kami lakukan adalah melakukan pengecekan apakah pipe berhasil dijalankan atau tidak. Jika `pipe1` gagal, maka program akan mengeluarkan output "Andri" dan jika `pipe2` gagal, maka program akan mengeluarkan output "Andri lagi".
+
+			if ((fork()) == 0) {
+
+
+				close(pipe1[0]);
+				dup2(pipe1[1], STDOUT_FILENO);
+
+				char *argv1[] = {"ps", "-aux", NULL};
+				execv("/bin/ps", argv1);
+			}
+			
+* Di child process  pertama ini dibuat file STDOUT dan eksekusi `ps`.
+
+			else {
+
+				while(wait(&status) > 0);
+
+				if ((fork()) == 0) {
+				close(pipe1[1]);
+				close(pipe2[0]);
+				// printf("---masuk child 2\n");
+				dup2(pipe1[0], STDIN_FILENO);
+				dup2(pipe2[1], STDOUT_FILENO);
+
+				char *argv1[] = {"sort", "-nrk", "3,3", NULL};
+				execv("/usr/bin/sort", argv1);
+
+				} 
+				
+* Di child process ini dibuat file STDIN dan STDOUT dan eksekusi `sort`.
+
+				else {
+
+					// // input from pipe1
+					close(pipe1[0]);
+					close(pipe1[1]);
+					close(pipe2[1]);
+					while(wait(&status) > 0);
+					// printf("---masuk parent");
+					dup2(pipe2[0], STDIN_FILENO);
+					close(pipe2[0]);
+
+					char *argv1[] = {"head", "-5", NULL};
+					execv("/usr/bin/head", argv1);
+
+				}
+			}
+		}
+
+* Masuk ke parent proses dibuat file STDIN dan eksekusi `head`.
 
 #### a. opsi -f: digunakan untuk mengkategorikan file untuk file-file tertentu sebagai argumen.
 #### b. opsi -d: digunakan untuk mengkategorikan file dalam directory tertentu sebagai argumen.
