@@ -12,12 +12,12 @@ pthread_mutex_t softex;
 int	*value, *andri, goal1, goal3, muteks;
 int hasil[col1*col3];
 int baru[col1*col3];
-int final[col1*col3];
+unsigned long long int final[col1*col3];
 int argt[col1*col3];
 pthread_t thread_id[col1*col3];
 
-int fact(int num){
-	int i = 1;
+unsigned long long int fact(int num){
+	unsigned long long int i = 1;
 	while (num > 1){
 		i *= num;
 		num--;
@@ -46,20 +46,20 @@ void* factpthread3(void *z){
 
 	if (hasil[*goal2] >= baru[*goal2]){
 
-		final[*goal2] += fact(hasil[*goal2])/fact(hasil[*goal2]-baru[*goal2]);
-		printf("final %d: %d\n", *goal2, final[*goal2]);
+		final[*goal2] = fact(hasil[*goal2])/fact(hasil[*goal2]-baru[*goal2]);
+		printf("final A %d: %llu\n", *goal2, final[*goal2]);
 
 	}
 
 	else if (hasil[*goal2] < baru[*goal2]){
 
-		final[*goal2] += fact(hasil[*goal2]);
-		printf("final %d: %d\n", *goal2, final[*goal2]);
+		final[*goal2] = fact(hasil[*goal2]);
+		printf("final B %d: %llu\n", *goal2, final[*goal2]);
 
 	}
-	else final[*goal2] += 0;
+	else final[*goal2] = 0;
 	muteks = 1;
-	printf("/n");
+	printf("\n");
 
 }
 
@@ -95,7 +95,7 @@ void matrixprint(int param){
 		for(int i = 0; i < col1; i++){
 			for(int j = 0; j < col3; j++){
 				// printf("Halo ");
-				printf("%d ", final[i*col3+j]);
+				printf("%llu ", final[i*col3+j]);
 			}
 			printf("\n");
 		}
