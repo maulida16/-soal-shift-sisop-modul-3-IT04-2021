@@ -861,8 +861,6 @@ Keverk adalah orang yang cukup ambisius dan terkenal di angkatannya. Sebelum dia
 * `shmdt(value)` dan  `shmdt(andri)` digunakan untuk melepaskan segmen shared memory yang digunakan.
 		
 #### c. Membuat program untuk mengecek 5 proses teratas menggunakan pipe dengan command `ps aux | sort -nrk 3,3 | head -5`	
-		
-## Soal 3 : Membuat opsi untuk menjalankan program
 
 	#include <stdlib.h>
 	#include <stdio.h>
@@ -963,7 +961,7 @@ Soal 2.c
 ![image](https://user-images.githubusercontent.com/73152464/119265109-be68c280-bc0f-11eb-80f7-75623de0ce40.png)
 
 #### Kendala:
-* Saat tipe `int` diganti dengan `long long int` program tidak berjalan
+* Saat tipe `int` diganti dengan `long long int` program menjadi bermasalah.
 
 
 ## Soal 3
